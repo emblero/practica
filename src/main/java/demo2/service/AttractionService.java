@@ -1,6 +1,9 @@
 package demo2.service;
 
 import java.util.List;
+
+import demo2.model.Assistance;
+import demo2.repository.AssistanceRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import demo2.repository.AttractionRepository;
@@ -14,6 +17,8 @@ public class AttractionService {
     private AttractionRepository repository;
     @Autowired
     private LocalityRepository localRepository;
+    @Autowired
+    private AssistanceRepository assistanceRepository;
 
     public void addAttraction(Attraction attraction) {
         if (attraction == null) {
@@ -52,5 +57,14 @@ public class AttractionService {
             throw new IllegalArgumentException("Locality cannot be null");
         }
         localRepository.save(locality);
+    }
+    public void addAssistance(Assistance assistance) {
+        assistanceRepository.save(assistance);
+    }
+    public List<Assistance> getAssistance() {
+        return assistanceRepository.findAll();
+    }
+    public List<Locality> getLocality() {
+        return localRepository.findAll();
     }
 }

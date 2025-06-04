@@ -1,5 +1,6 @@
 package demo2.controller;
 
+import demo2.model.Assistance;
 import demo2.model.Locality;
 import java.util.List;
 import demo2.model.Attraction;
@@ -53,5 +54,20 @@ public class Controller {
     @PostMapping("/editAttractionById")
     public void editAttraction(@RequestParam Long id, @RequestParam String description){
         attractionService.editAttraction(id, description);
+    }
+
+    @PostMapping("/addAssistance")
+    public void addAssistance(@RequestBody Assistance assistance){
+        attractionService.addAssistance(assistance);
+    }
+
+    @GetMapping("/getAssistance")
+    public List<Assistance> getAssistance(){
+        return attractionService.getAssistance();
+    }
+
+    @GetMapping("/getLocality")
+    public List<Locality> getLocality(){
+        return attractionService.getLocality();
     }
 }
