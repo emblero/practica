@@ -1,5 +1,6 @@
 package demo2.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -27,6 +28,7 @@ public class Locality {
     String region;
 
     @OneToMany
+    @JsonIgnore
     List<Locality> localities;
 
     @JsonProperty("latitude")

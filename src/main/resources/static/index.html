@@ -1,0 +1,438 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Attractions Management</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        table { border-collapse: collapse; width: 100%; margin-bottom: 20px; }
+        th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+        th { background-color: #f2f2f2; }
+        form { margin-bottom: 20px; padding: 10px; border: 1px solid #eee; }
+        input, select { margin: 5px 0; padding: 8px; width: 100%; box-sizing: border-box; }
+        button { padding: 8px 12px; background-color: #4CAF50; color: white; border: none; cursor: pointer; }
+        button:hover { background-color: #45a049; }
+        .section { margin-bottom: 30px; }
+    </style>
+</head>
+<body>
+<h1>Attractions Management</h1>
+
+<div class="section">
+    <h2>Home</h2>
+    <button onclick="getHome()">Get Welcome Message</button>
+    <div id="homeResult"></div>
+</div>
+
+<div class="section">
+    <h2>Attractions</h2>
+    <button onclick="getAllAttractions()">Get All Attractions</button>
+    <table id="attractionsTable">
+        <thead>
+        <tr>
+            <th>ID</th>
+            <th>Name</th>
+            <th>Date</th>
+            <th>Description</th>
+            <th>Type</th>
+            <th>Locality</th>
+            <th>Assistance</th>
+        </tr>
+        </thead>
+        <tbody></tbody>
+    </table>
+</div>
+
+<div class="section">
+    <h3>Add New Attraction</h3>
+    <form id="addAttractionForm">
+        <input type="text" name="name" placeholder="Name" required>
+        <input type="date" name="dateCreation" placeholder="Date" required>
+        <input type="text" name="description" placeholder="Description" required>
+        <select name="attractionType" required>
+            <option value="Дворец">Дворец</option>
+            <option value="Парк">Парк</option>
+            <option value="Музей">Музей</option>
+            <option value="Заповедник">Заповедник</option>
+        </select>
+        <select name="locality" id="localitySelect" required></select>
+        <select name="assistance" id="assistanceSelect"></select>
+        <button type="button" onclick="addAttraction()">Add Attraction</button>
+    </form>
+</div>
+
+<div class="section">
+    <h3>Filter Attractions by Locality</h3>
+    <select id="localityFilter" onchange="filterByLocality()">
+        <option value="">Select Locality</option>
+    </select>
+    <table id="filteredAttractionsTable">
+        <thead>
+        <tr>
+            <th>ID</th>
+            <th>Name</th>
+            <th>Date</th>
+            <th>Description</th>
+            <th>Type</th>
+            <th>Locality</th>
+        </tr>
+        </thead>
+        <tbody></tbody>
+    </table>
+</div>
+
+
+<div class="section">
+    <h3>Edit Attraction</h3>
+    <form id="editAttractionForm">
+        <input type="number" name="id" placeholder="Attraction ID" required>
+        <input type="text" name="description" placeholder="New Description" required>
+        <button type="button" onclick="editAttraction()">Edit Description</button>
+    </form>
+</div>
+
+<div class="section">
+    <h3>Delete Attraction</h3>
+    <form id="deleteAttractionForm">
+        <input type="number" name="id" placeholder="Attraction ID" required>
+        <button type="button" onclick="deleteAttraction()">Delete Attraction</button>
+    </form>
+</div>
+
+<div class="section">
+    <h2>Localities</h2>
+    <button onclick="getAllLocalities()">Get All Localities</button>
+    <table id="localitiesTable">
+        <thead>
+        <tr>
+            <th>ID</th>
+            <th>Place</th>
+            <th>Region</th>
+            <th>Latitude</th>
+            <th>Longitude</th>
+        </tr>
+        </thead>
+        <tbody></tbody>
+    </table>
+
+    <h3>Add New Locality</h3>
+    <form id="addLocalityForm">
+        <input type="text" name="place" placeholder="Place" required>
+        <input type="text" name="region" placeholder="Region" required>
+        <input type="number" step="0.000001" name="latitude" placeholder="Latitude" required>
+        <input type="number" step="0.000001" name="longitude" placeholder="Longitude" required>
+        <button type="button" onclick="addLocality()">Add Locality</button>
+    </form>
+</div>
+
+<div class="section">
+    <h2>Assistance</h2>
+    <button onclick="getAllAssistance()">Get All Assistance</button>
+    <table id="assistanceTable">
+        <thead>
+        <tr>
+            <th>ID</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Executor</th>
+        </tr>
+        </thead>
+        <tbody></tbody>
+    </table>
+
+    <h3>Add New Assistance</h3>
+    <form id="addAssistanceForm">
+        <select name="assistanceType" required>
+            <option value="GID">Гид</option>
+            <option value="AUTOTOUR">Авто Экскурсия</option>
+            <option value="FOOD">Питание</option>
+        </select>
+        <input type="text" name="description" placeholder="Description" required>
+        <input type="text" name="executor" placeholder="Executor" required>
+        <button type="button" onclick="addAssistance()">Add Assistance</button>
+    </form>
+</div>
+
+<script>
+    async function fetchData(url, method = 'GET', data = null, expectJson = true) {
+        const options = {
+            method,
+            headers: { 'Content-Type': 'application/json' }
+        };
+        if (data) options.body = JSON.stringify(data);
+
+        try {
+            const response = await fetch(url, options);
+            if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+
+            if (method === 'POST' && response.status === 200 && !expectJson) {
+                return null;
+            }
+
+            if (url === '/attractions/') {
+                return await response.text();
+            }
+
+            return await response.json();
+        } catch (error) {
+            console.error('Error:', error);
+            alert(`Error: ${error.message}`);
+            return null;
+        }
+    }
+
+    async function getHome() {
+        const result = await fetchData('/attractions/', 'GET', null, false);
+        document.getElementById('homeResult').textContent = result;
+    }
+
+    async function getAllAttractions() {
+        const attractions = await fetchData('/attractions/getAttractions');
+        if (attractions) renderAttractionsTable(attractions);
+    }
+
+    function renderAttractionsTable(attractions) {
+        const tbody = document.querySelector('#attractionsTable tbody');
+        tbody.innerHTML = '';
+
+        attractions.forEach(attraction => {
+            const row = document.createElement('tr');
+            row.innerHTML = `
+                    <td>${attraction.id}</td>
+                    <td>${attraction.name}</td>
+                    <td>${attraction.dateCreation}</td>
+                    <td>${attraction.description}</td>
+                    <td>${attraction.attractionType}</td>
+                    <td>${attraction.locality ? attraction.locality.place : ''}</td>
+                    <td>${attraction.assistance ? attraction.assistance.assistanceType : ''}</td>
+                `;
+            tbody.appendChild(row);
+        });
+    }
+
+    async function addAttraction() {
+        const form = document.getElementById('addAttractionForm');
+        const localitySelect = document.getElementById('localitySelect');
+        const assistanceSelect = document.getElementById('assistanceSelect');
+
+        // Получаем выбранные значения
+        const selectedLocalityId = localitySelect.value; // Это ID локации
+        const selectedAssistanceId = assistanceSelect.value;
+
+        if (!selectedLocalityId) {
+            alert("Пожалуйста, выберите локацию!");
+            return;
+        }
+
+        // Получаем полные данные о выбранной локации по ID
+        const localities = await fetchData('/attractions/getLocality');
+        const selectedLocality = localities.find(l => l.id == selectedLocalityId);
+
+        if (!selectedLocality) {
+            alert("Выбранная локация не найдена!");
+            return;
+        }
+
+        // Получаем полные данные о выбранной помощи (если выбрана)
+        let selectedAssistance = null;
+        if (selectedAssistanceId) {
+            const assistances = await fetchData('/attractions/getAssistance');
+            selectedAssistance = assistances.find(a => a.id == selectedAssistanceId);
+        }
+
+        // Формируем данные для отправки
+        const formData = {
+            name: form.name.value,
+            dateCreation: form.dateCreation.value,
+            description: form.description.value,
+            attractionType: form.attractionType.value,
+            locality: selectedLocality,
+            assistance: selectedAssistance
+        };
+
+        try {
+            const response = await fetch('/attractions/addAttraction', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(formData)
+            });
+
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(errorData.message || 'Ошибка при добавлении');
+            }
+
+            getAllAttractions();
+            form.reset();
+        } catch (error) {
+            console.error('Error:', error);
+            alert('Ошибка: ' + error.message);
+        }
+    }
+
+    async function filterByLocality() {
+        const place = document.getElementById('localityFilter').value;
+        if (!place) return;
+
+        const attractions = await fetchData(`/attractions/getAttractionByLocality?place=${encodeURIComponent(place)}`);
+        if (attractions) {
+            const tbody = document.querySelector('#filteredAttractionsTable tbody');
+            tbody.innerHTML = '';
+
+            attractions.forEach(attraction => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${attraction.id}</td>
+                    <td>${attraction.name}</td>
+                    <td>${attraction.dateCreation}</td>
+                    <td>${attraction.description}</td>
+                    <td>${attraction.attractionType}</td>
+                    <td>${attraction.locality ? attraction.locality.place : ''}</td>
+                `;
+                tbody.appendChild(row);
+            });
+        }
+    }
+
+    async function editAttraction() {
+        const form = document.getElementById('editAttractionForm');
+        const id = form.id.value;
+        const description = form.description.value;
+
+        await fetchData(`/attractions/editAttractionById?id=${id}&description=${encodeURIComponent(description)}`, 'POST', null, false);
+        getAllAttractions();
+        form.reset();
+    }
+
+    async function deleteAttraction() {
+        const form = document.getElementById('deleteAttractionForm');
+        const id = form.id.value;
+
+        await fetchData(`/attractions/deleteAttractionById?id=${id}`, 'POST', null, false);
+        getAllAttractions();
+        form.reset();
+    }
+
+    async function getAllLocalities() {
+        const localities = await fetchData('/attractions/getLocality');
+        if (localities) {
+            renderLocalitiesTable(localities);
+            updateLocalitySelects(localities);
+        }
+    }
+
+    function renderLocalitiesTable(localities) {
+        const tbody = document.querySelector('#localitiesTable tbody');
+        tbody.innerHTML = '';
+
+        localities.forEach(locality => {
+            const row = document.createElement('tr');
+            row.innerHTML = `
+                    <td>${locality.id}</td>
+                    <td>${locality.place}</td>
+                    <td>${locality.region}</td>
+                    <td>${locality.latitude}</td>
+                    <td>${locality.longitude}</td>
+                `;
+            tbody.appendChild(row);
+        });
+    }
+
+    function updateLocalitySelects(localities) {
+        // Для фильтрации (сохраняем название места)
+        const filterSelect = document.getElementById('localityFilter');
+        filterSelect.innerHTML = '<option value="">Select Locality</option>';
+
+        // Для формы добавления (сохраняем ID локации)
+        const addFormSelect = document.getElementById('localitySelect');
+        addFormSelect.innerHTML = '<option value="">Select Locality</option>';
+
+        localities.forEach(locality => {
+            // Для фильтра
+            const filterOption = document.createElement('option');
+            filterOption.value = locality.place;
+            filterOption.textContent = locality.place;
+            filterSelect.appendChild(filterOption);
+
+            // Для формы добавления
+            const addOption = document.createElement('option');
+            addOption.value = locality.id;  // Сохраняем ID
+            addOption.textContent = `${locality.place} (${locality.region})`;
+            addFormSelect.appendChild(addOption);
+        });
+    }
+
+    async function addLocality() {
+        const form = document.getElementById('addLocalityForm');
+        const formData = {
+            place: form.place.value,
+            region: form.region.value,
+            latitude: parseFloat(form.latitude.value),
+            longitude: parseFloat(form.longitude.value)
+        };
+
+        await fetchData('/attractions/addLocality', 'POST', formData, false);
+        getAllLocalities();
+        form.reset();
+    }
+
+    async function getAllAssistance() {
+        const assistance = await fetchData('/attractions/getAssistance');
+        if (assistance) {
+            renderAssistanceTable(assistance);
+            updateAssistanceSelect(assistance);
+        }
+    }
+
+    function renderAssistanceTable(assistance) {
+        const tbody = document.querySelector('#assistanceTable tbody');
+        tbody.innerHTML = '';
+
+        assistance.forEach(item => {
+            const row = document.createElement('tr');
+            row.innerHTML = `
+                    <td>${item.id}</td>
+                    <td>${item.assistanceType}</td>
+                    <td>${item.description}</td>
+                    <td>${item.executor}</td>
+                `;
+            tbody.appendChild(row);
+        });
+    }
+
+    function updateAssistanceSelect(assistance) {
+        const select = document.getElementById('assistanceSelect');
+        select.innerHTML = '<option value="">None</option>';
+
+        assistance.forEach(item => {
+            const option = document.createElement('option');
+            option.value = item.id;
+            option.textContent = `${item.assistanceType} - ${item.executor}`;
+            select.appendChild(option);
+        });
+    }
+
+    async function addAssistance() {
+        const form = document.getElementById('addAssistanceForm');
+        const formData = {
+            assistanceType: form.assistanceType.value,
+            description: form.description.value,
+            executor: form.executor.value
+        };
+
+        await fetchData('/attractions/addAssistance', 'POST', formData, false);
+        getAllAssistance();
+        form.reset();
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+        getAllAttractions();
+        getAllLocalities();
+        getAllAssistance();
+    });
+</script>
+</body>
+</html>

@@ -1,6 +1,7 @@
 package demo2.service;
 
 import java.util.List;
+import java.util.Optional;
 
 import demo2.model.Assistance;
 import demo2.repository.AssistanceRepository;
@@ -24,6 +25,20 @@ public class AttractionService {
         if (attraction == null) {
             throw new IllegalArgumentException("Attraction cannot be null");
         }
+        Optional.ofNullable(attraction.getLocality())
+                .map(Locality::getId)
+                .ifPresent(localityId -> {
+                    Locality locality = localRepository.findById(localityId)
+                            .orElseThrow(() -> new RuntimeException("Locality not found"));
+                    attraction.setLocality(locality);
+                });
+        Optional.ofNullable(attraction.getAssistance())
+                .map(Assistance::getId)
+                .ifPresent(assistanceId -> {
+                    Assistance assistance = assistanceRepository.findById(assistanceId)
+                            .orElseThrow(() -> new RuntimeException("Assistance not found"));
+                    attraction.setAssistance(assistance);
+                });
         repository.save(attraction);
     }
 

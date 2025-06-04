@@ -1,5 +1,6 @@
 package demo2.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import demo2.model.enums.AssistanceType;
 import jakarta.persistence.*;
@@ -29,7 +30,8 @@ public class Assistance {
     @JsonProperty("executor")
     private String executor;
 
-    @OneToMany(mappedBy = "assistance") // Указываем, что связь управляется полем assistance в Attraction
+    @OneToMany(mappedBy = "assistance")
+    @JsonIgnore
     private List<Attraction> attractionList;
 
     @Override
